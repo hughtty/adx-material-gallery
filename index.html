@@ -26,6 +26,11 @@ header {
   background: var(--panel2); border: 1px solid var(--line); color: var(--text);
   border-radius: 8px; padding: 7px 12px; font-size: 13px; outline: none;
 }
+#dirBtn {
+  background: var(--panel2); border: 1px solid var(--line); color: var(--text);
+  border-radius: 8px; padding: 7px 12px; font-size: 13px; cursor: pointer;
+}
+#dirBtn:hover { border-color: var(--accent); color: var(--accent); }
 .toolbar input:focus, .toolbar select:focus { border-color: var(--accent); }
 .toolbar input[type=search] { width: 260px; }
 .chip {
@@ -131,6 +136,7 @@ header {
       <option value="days">按投放天数</option>
       <option value="duration">按时长</option>
     </select>
+    <button id="dirBtn" title="点击切换正序/倒序">↓ 倒序</button>
     <span id="mediaChips" style="display:flex;gap:6px;flex-wrap:wrap"></span>
   </div>
 </header>
@@ -166,7 +172,7 @@ const icon = {
   shares: '<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M2 21l21-9L2 3v7l15 2-15 2v7z"/></svg>',
   plays: '<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>'
 };
-let cur = [], filtered = [], mediaSel = '全部', modalIdx = -1;
+let cur = [], filtered = [], mediaSel = '全部', modalIdx = -1, sortDesc = true;
 
 const medias = [...new Set(DATA.flatMap(d => d.media.length ? d.media : ['未知']))];
 $('#stats').innerHTML = `共 <b>${DATA.length}</b> 条素材 · 累计预估曝光 <b>${fmt(DATA.reduce((a,b)=>a+b.exposure,0))}</b>`;
@@ -187,7 +193,8 @@ function applyFilter() {
     (!q || [d.title, d.company.join('|'), d.product.join('|'), d.copies.join('|'), d.id].join(' ').toLowerCase().includes(q));
   filtered = DATA.filter(ok);
   const key = $('#sort').value;
-  filtered.sort((a, b) => (b[key] ?? 0) - (a[key] ?? 0) || a.rank - b.rank);
+  const mul = sortDesc ? -1 : 1;
+  filtered.sort((a, b) => mul * ((b[key] ?? 0) - (a[key] ?? 0)) || a.rank - b.rank);
   cur = filtered;
 }
 
@@ -225,6 +232,11 @@ function render() {
 
 $('#q').addEventListener('input', render);
 $('#sort').addEventListener('change', render);
+$('#dirBtn').addEventListener('click', () => {
+  sortDesc = !sortDesc;
+  $('#dirBtn').textContent = sortDesc ? '↓ 倒序' : '↑ 正序';
+  render();
+});
 
 function openModal(i) {
   modalIdx = i;
